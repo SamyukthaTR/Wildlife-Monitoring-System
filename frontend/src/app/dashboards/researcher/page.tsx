@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import AnalysisPanel from '@/components/AnalysisPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api';
 
@@ -10,13 +11,21 @@ type Site = { id: number, location_name: string, latitude: number, longitude: nu
 type Survey = { id: number, site_id: number, survey_date: string, status: string };
 type Observation = { id: number, survey_id: number, file_type: string, uploaded_at: string, processing_status: string };
 
+const STATUS_STYLES: Record<string, string> = {
+  completed: 'bg-emerald-100 text-emerald-700',
+  processing: 'bg-sky-100 text-sky-700',
+  pending: 'bg-amber-100 text-amber-700',
+  failed: 'bg-rose-100 text-rose-700',
+};
+
 export default function ResearcherDashboard() {
   const { user, logout } = useAuth();
-  
+
   // Data State
   const [sites, setSites] = useState<Site[]>([]);
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [observations, setObservations] = useState<Observation[]>([]);
+  const [viewingAnalysis, setViewingAnalysis] = useState<number | null>(null);
 
   // Form States
   const [siteForm, setSiteForm] = useState({ location_name: '', latitude: '', longitude: '', habitat_type: '', protected_area: '', monitoring_device_type: '' });
@@ -114,7 +123,7 @@ export default function ResearcherDashboard() {
       await api.post('/observations/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setMessage('File uploaded successfully!');
+      setMessage('File uploaded. Analysis has been queued and runs in the background.');
       fetchData();
       setUploadForm({ survey_id: '', file: null });
     } catch (err) {
@@ -123,9 +132,25 @@ export default function ResearcherDashboard() {
     setLoading(false);
   };
 
+  const handleAnalyze = async (obsId: number) => {
+    try {
+      await api.post(`/analysis/observations/${obsId}/analyze`);
+      setMessage(`Analysis queued for observation #${obsId}.`);
+      fetchData();
+    } catch {
+      setMessage(`Could not queue analysis for observation #${obsId}.`);
+    }
+  };
+
   return (
     <ProtectedRoute allowedRoles={['Wildlife Researcher']}>
       <div className="min-h-screen bg-slate-50 p-8 font-sans">
+        {viewingAnalysis !== null && (
+          <AnalysisPanel
+            observationId={viewingAnalysis}
+            onClose={() => { setViewingAnalysis(null); fetchData(); }}
+          />
+        )}
         <div className="max-w-7xl mx-auto space-y-8">
           
           {/* Header */}
@@ -134,9 +159,14 @@ export default function ResearcherDashboard() {
               <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Researcher Dashboard</h1>
               <p className="text-slate-500 mt-1">Welcome back, {user?.name}</p>
             </div>
-            <button onClick={logout} className="px-5 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-medium transition-colors">
-              Sign Out
-            </button>
+            <div className="flex gap-3">
+              <a href="/biodiversity" className="px-5 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl font-medium transition-colors">
+                Biodiversity Analytics
+              </a>
+              <button onClick={logout} className="px-5 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-medium transition-colors">
+                Sign Out
+              </button>
+            </div>
           </div>
 
           {message && (
@@ -249,6 +279,7 @@ export default function ResearcherDashboard() {
                     <th className="py-3 px-4 font-medium">Type</th>
                     <th className="py-3 px-4 font-medium">Date</th>
                     <th className="py-3 px-4 font-medium">Status</th>
+                    <th className="py-3 px-4 font-medium">Analysis</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -259,15 +290,23 @@ export default function ResearcherDashboard() {
                       <td className="py-3 px-4 text-slate-600 capitalize">{obs.file_type}</td>
                       <td className="py-3 px-4 text-slate-600">{new Date(obs.uploaded_at).toLocaleDateString()}</td>
                       <td className="py-3 px-4">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${obs.processing_status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_STYLES[obs.processing_status] ?? 'bg-slate-100 text-slate-600'}`}>
                           {obs.processing_status}
                         </span>
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <button onClick={() => setViewingAnalysis(obs.id)} className="text-indigo-600 hover:text-indigo-800 font-medium text-sm px-3 py-1 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors">
+                          View Results
+                        </button>
+                        <button onClick={() => handleAnalyze(obs.id)} className="ml-2 text-slate-600 hover:text-slate-800 font-medium text-sm px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                          {obs.processing_status === 'completed' ? 'Re-analyze' : 'Analyze'}
+                        </button>
                       </td>
                     </tr>
                   ))}
                   {observations.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-slate-500">No observations logged yet.</td>
+                      <td colSpan={6} className="py-8 text-center text-slate-500">No observations logged yet.</td>
                     </tr>
                   )}
                 </tbody>

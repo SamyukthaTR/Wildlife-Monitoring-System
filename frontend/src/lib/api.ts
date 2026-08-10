@@ -1,5 +1,10 @@
 import axios from 'axios';
 
+// docker-compose already sets NEXT_PUBLIC_API_URL; the literal is the fallback
+// for running the dev server directly.
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+
 // In-memory access token storage
 let accessToken: string | null = null;
 
@@ -10,7 +15,7 @@ export const setAccessToken = (token: string | null) => {
 export const getAccessToken = () => accessToken;
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: API_BASE_URL,
   withCredentials: true, // Crucial for sending/receiving HttpOnly cookies
 });
 
@@ -39,7 +44,7 @@ api.interceptors.response.use(
       try {
         // Attempt to refresh the token via HttpOnly cookie
         const res = await axios.post(
-          'http://localhost:8000/auth/refresh',
+          `${API_BASE_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         );

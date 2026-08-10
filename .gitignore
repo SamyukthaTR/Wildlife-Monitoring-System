@@ -16,8 +16,14 @@ htmlcov/
 env/
 venv/
 .venv/
+.venv-ml/
 env.bak/
 venv.bak/
+
+# Downloaded model weights (YOLOv8n, ResNet-50, AST) — fetched by
+# scripts/download_models.py into MODEL_CACHE_DIR, backed by a docker volume.
+model_cache/
+*.pt
 
 # OS generated files
 .DS_Store

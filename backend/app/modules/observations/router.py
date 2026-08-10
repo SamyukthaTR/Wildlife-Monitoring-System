@@ -1,11 +1,15 @@
 import os
 import uuid
 import shutil
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import (
+    APIRouter, BackgroundTasks, Depends, HTTPException, status, UploadFile, File, Form
+)
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
+from app.core.config import settings
 from app.core.deps import get_db, get_current_user, RoleChecker
+from app.modules.analysis.pipeline import run_analysis
 from app.modules.users.models import User
 from app.modules.monitoring.models import Survey
 from app.modules.observations.models import ObservationLog, FileTypeEnum
@@ -13,7 +17,7 @@ from app.modules.observations.schemas import ObservationLogResponse
 
 router = APIRouter(prefix="/observations", tags=["observations"])
 
-UPLOAD_DIR = "/app/uploads"
+UPLOAD_DIR = settings.UPLOAD_DIR
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "audio/mpeg", "audio/wav", "audio/ogg"]
 
@@ -24,6 +28,7 @@ write_roles = RoleChecker(['Wildlife Researcher', 'Conservation Officer'])
 
 @router.post("/upload", response_model=ObservationLogResponse, status_code=status.HTTP_201_CREATED)
 async def upload_observation(
+    background_tasks: BackgroundTasks,
     survey_id: int = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
@@ -71,6 +76,10 @@ async def upload_observation(
     db.add(new_obs)
     db.commit()
     db.refresh(new_obs)
+
+    # Analyse after the response is sent. CPU inference takes a few seconds, so
+    # the uploader gets an immediate 201 and polls /analysis/observations/{id}.
+    background_tasks.add_task(run_analysis, new_obs.id)
 
     return new_obs
 

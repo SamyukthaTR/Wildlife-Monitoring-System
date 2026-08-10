@@ -1,3 +1,6 @@
+# CPU-only torch wheels. Without this index pip pulls the CUDA build (~5GB).
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 fastapi==0.110.0
 uvicorn[standard]==0.29.0
 pydantic==2.6.4
@@ -11,3 +14,23 @@ passlib[bcrypt]==1.7.4
 bcrypt==3.2.0
 python-multipart==0.0.9
 email-validator==2.1.1
+
+# --- Milestone 2: AI / ML ---
+# numpy must stay <2 for librosa/numba/opencv at these versions.
+numpy==1.26.4
+scipy==1.13.1
+Pillow==10.4.0
+torch==2.3.1
+torchvision==0.18.1
+# AST's feature extractor uses torchaudio's kaldi fbank when present; without it
+# transformers falls back to a numpy path that warns about empty mel filters.
+torchaudio==2.3.1
+ultralytics==8.2.48
+transformers==4.42.4
+librosa==0.10.2.post1
+soundfile==0.12.1
+# headless build avoids needing libgl1 in the image. Must be installed after
+# ultralytics, which declares plain opencv-python as a dependency.
+opencv-python-headless==4.10.0.84
+
+pytest==8.2.2

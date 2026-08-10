@@ -14,6 +14,8 @@ from app.core.database import Base
 from app.modules.users.models import User
 from app.modules.monitoring.models import MonitoringSite, Survey, Device
 from app.modules.observations.models import ObservationLog
+from app.modules.species.models import Species
+from app.modules.analysis.models import AnalysisRun, ImageDetection, AudioClassification
 
 # Ensure GeoAlchemy2 spatial types are reflected
 import geoalchemy2

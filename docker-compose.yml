@@ -11,6 +11,7 @@ services:
     volumes:
       - ./backend:/app
       - wildlife_uploads:/app/uploads
+      - wildlife_models:/app/model_cache
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -20,6 +21,10 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - MONGO_URI=${MONGO_URI}
       - MONGO_DB=${MONGO_DB}
+      # Was never passed through, so JWTs were signed with the config.py default.
+      - SECRET_KEY=${SECRET_KEY}
+      - UPLOAD_DIR=/app/uploads
+      - MODEL_CACHE_DIR=/app/model_cache
     depends_on:
       - postgres
       - mongodb
@@ -70,3 +75,4 @@ volumes:
   postgres_data:
   mongodb_data:
   wildlife_uploads:
+  wildlife_models:
