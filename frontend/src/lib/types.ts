@@ -125,3 +125,188 @@ export type SpeciesDetectionSummary = {
   acoustic_detections: number;
   total_detections: number;
 };
+
+// Shared shapes for the Milestone 3 population, habitat, conservation and
+// ecosystem-health APIs. Every derived numeric field is `number | null` —
+// null means "undefined here", never a fabricated 0.
+
+export type TrendResult = {
+  n_points: number;
+  slope: number | null;
+  r_value: number | null;
+  p_value: number | null;
+  significant: boolean;
+  direction: 'increasing' | 'decreasing' | 'stable' | 'insufficient evidence';
+  percent_change_per_period: number | null;
+  note: string | null;
+};
+
+export type PopulationVariability = {
+  n_surveys: number;
+  median: number | null;
+  low: number | null;
+  high: number | null;
+  note: string;
+};
+
+export type PopulationEstimateRow = {
+  species_id: number;
+  scientific_name: string;
+  common_name: string | null;
+  species_group: string;
+  /** A lower bound on population size, not an estimate of it. */
+  peak_simultaneous_count: number | null;
+  frames_examined: number;
+  note: string;
+  variability: PopulationVariability;
+};
+
+export type PopulationEstimates = {
+  site_id: number | null;
+  species: PopulationEstimateRow[];
+  method: string;
+};
+
+export type PopulationTrendRow = {
+  species_id: number;
+  scientific_name: string;
+  common_name: string | null;
+  species_group: string;
+  data_points: { survey_date: string; count: number }[];
+  trend: TrendResult;
+};
+
+export type PopulationTrends = {
+  site_id: number | null;
+  species: PopulationTrendRow[];
+  method: string;
+};
+
+export type PopulationDensityRow = {
+  species_id: number;
+  scientific_name: string;
+  common_name: string | null;
+  species_group: string;
+  detections: number;
+  encounter_rate_per_100_observations: number | null;
+};
+
+export type PopulationDensity = {
+  site_id: number | null;
+  observation_effort: number;
+  species: PopulationDensityRow[];
+  is_true_density: false;
+  note: string;
+};
+
+export type DistributionRecord = {
+  species_id: number;
+  scientific_name: string;
+  common_name: string | null;
+  site_id: number;
+  location_name: string;
+  year: number;
+  month: number;
+  detections: number;
+};
+
+export type PopulationDistribution = {
+  site_id: number | null;
+  records: DistributionRecord[];
+  note: string;
+};
+
+export type HabitatAssessmentRecord = {
+  id: number;
+  site_id: number;
+  assessed_at: string;
+  images_sampled: number;
+  vegetation_index: number;
+  green_pixel_fraction: number;
+  canopy_texture_index: number;
+  declared_habitat_type: string | null;
+  inferred_habitat_signal: string;
+};
+
+export type HabitatSiteSummary = HabitatAssessmentRecord & {
+  location_name: string;
+  assessments: number;
+  vegetation_trend: TrendResult;
+  degradation_flag: boolean;
+};
+
+export type HabitatDetail = {
+  site_id: number;
+  location_name: string;
+  declared_habitat_type: string | null;
+  assessments: HabitatAssessmentRecord[];
+  vegetation_trend?: TrendResult;
+  degradation_flag?: boolean;
+  note: string;
+};
+
+export type EnvironmentalReadingRow = {
+  recorded_date: string;
+  temperature_c: number | null;
+  humidity_pct: number | null;
+  precipitation_mm: number | null;
+  wind_speed_kmh: number | null;
+};
+
+export type HabitatEnvironment = {
+  site_id: number;
+  location_name: string;
+  readings: EnvironmentalReadingRow[];
+  readings_count?: number;
+  mean_temperature_c: number | null;
+  mean_humidity_pct: number | null;
+  mean_precipitation_mm: number | null;
+  mean_wind_speed_kmh: number | null;
+  note: string;
+};
+
+export type HabitatSuitability = {
+  site_id: number;
+  location_name: string;
+  species_group: string;
+  score: number | null;
+  computed_from: string[];
+  note: string;
+};
+
+export type ConservationRecommendation = {
+  category: 'conservation_priority' | 'habitat_restoration' | 'wildlife_protection' | 'monitoring_allocation';
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  rationale: string;
+};
+
+export type SiteRecommendations = {
+  site_id: number;
+  location_name: string;
+  recommendations: ConservationRecommendation[];
+};
+
+export type ConservationRecommendationsResponse = {
+  sites: SiteRecommendations[];
+  note: string;
+};
+
+export type EcosystemHealth = {
+  site_id: number | null;
+  biodiversity_score: number | null;
+  habitat_quality_score: number | null;
+  population_stability_score: number | null;
+  overall_ecosystem_health_score: number | null;
+  band: string | null;
+  computed_from: string[];
+  note: string;
+  inputs: {
+    species_richness: number;
+    shannon_index: number | null;
+    pielou_evenness: number | null;
+    species_with_trend_data: number;
+  };
+};
+
+export type EcosystemHealthSiteRow = EcosystemHealth & { location_name: string };

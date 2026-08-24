@@ -10,6 +10,10 @@ from app.modules.analysis.router import router as analysis_router
 from app.modules.species.router import router as species_router
 from app.modules.biodiversity.router import router as biodiversity_router
 from app.modules.reports.router import router as reports_router
+from app.modules.population.router import router as population_router
+from app.modules.habitat.router import router as habitat_router
+from app.modules.conservation.router import router as conservation_router
+from app.modules.ecosystem.router import router as ecosystem_router
 
 app = FastAPI(
     title="Wildlife Population Intelligence System",
@@ -37,3 +41,8 @@ app.include_router(analysis_router)
 app.include_router(species_router)
 app.include_router(biodiversity_router)
 app.include_router(reports_router)
+# Milestone 3: population, habitat, conservation, ecosystem intelligence
+app.include_router(population_router)
+app.include_router(habitat_router)
+app.include_router(conservation_router)
+app.include_router(ecosystem_router)

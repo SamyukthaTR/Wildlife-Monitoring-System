@@ -159,9 +159,12 @@ export default function ResearcherDashboard() {
               <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Researcher Dashboard</h1>
               <p className="text-slate-500 mt-1">Welcome back, {user?.name}</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <a href="/biodiversity" className="px-5 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl font-medium transition-colors">
                 Biodiversity Analytics
+              </a>
+              <a href="/population" className="px-5 py-2.5 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-xl font-medium transition-colors">
+                Population Intelligence
               </a>
               <button onClick={logout} className="px-5 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-medium transition-colors">
                 Sign Out
