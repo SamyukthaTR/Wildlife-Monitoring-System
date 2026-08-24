@@ -285,7 +285,7 @@ def _latency_metrics(db: Session) -> dict:
     def summarise(file_type: FileTypeEnum) -> dict:
         values = [
             run.latency_ms
-            for run, in db.query(AnalysisRun)
+            for run in db.query(AnalysisRun)
             .join(ObservationLog, AnalysisRun.observation_id == ObservationLog.id)
             .filter(
                 AnalysisRun.status == RunStatusEnum.COMPLETED,

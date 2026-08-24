@@ -120,6 +120,10 @@ def upsert(db, *, scientific_name: str, model_label: str | None, label_source: s
     if species is None:
         species = Species(scientific_name=scientific_name)
         db.add(species)
+        # autoflush is off on this session, so a later upsert() call in the
+        # same uncommitted batch needs this flushed to see it and avoid
+        # inserting a second row for the same scientific_name.
+        db.flush()
 
     species.common_name = common_name or species.common_name
     species.rank = rank

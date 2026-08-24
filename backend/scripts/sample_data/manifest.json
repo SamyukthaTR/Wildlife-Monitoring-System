@@ -1202,6 +1202,60 @@
       "license": "CC-BY-NC",
       "attribution": "(c) Ted Floyd, some rights reserved (CC BY-NC)",
       "media_url": "https://static.inaturalist.org/sounds/926747.wav?1710297310"
+    },
+    {
+      "source": "iNaturalist",
+      "source_id": "30671305",
+      "url": "https://www.inaturalist.org/observations/30671305",
+      "observed_on": "2018-05-31T22:23:14+05:30",
+      "latitude": 8.113142427,
+      "longitude": 77.4850678816,
+      "coordinates_obscured": false,
+      "species_group": "reptile",
+      "media_kind": "image",
+      "ground_truth": {
+        "scientific_name": "Sitana marudhamneydhal",
+        "common_name": "Serrated fan-throated lizard",
+        "rank": "species",
+        "taxon_class": null,
+        "taxon_order": null,
+        "taxon_family": null,
+        "inat_taxon_id": 512384,
+        "iucn_status": "EN",
+        "iucn_source": "iNaturalist conservation_status (authority: IUCN Red List)"
+      },
+      "file": "inaturalist/30671305.jpeg",
+      "bytes": 657688,
+      "license": "CC-BY-NC",
+      "attribution": "(c) Civin Solomon, some rights reserved (CC BY-NC)",
+      "media_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/47930640/large.jpeg"
+    },
+    {
+      "source": "iNaturalist",
+      "source_id": "147015177",
+      "url": "https://www.inaturalist.org/observations/147015177",
+      "observed_on": "2023-01-21T16:50:00+10:00",
+      "latitude": -27.2649123906,
+      "longitude": 152.0579757382,
+      "coordinates_obscured": false,
+      "species_group": "insect",
+      "media_kind": "image",
+      "ground_truth": {
+        "scientific_name": "Inimia nat",
+        "common_name": null,
+        "rank": "species",
+        "taxon_class": null,
+        "taxon_order": null,
+        "taxon_family": null,
+        "inat_taxon_id": 1514466,
+        "iucn_status": null,
+        "iucn_source": null
+      },
+      "file": "inaturalist/147015177.jpeg",
+      "bytes": 97550,
+      "license": "CC-BY-NC",
+      "attribution": "(c) Glenda Walter, some rights reserved (CC BY-NC)",
+      "media_url": "https://inaturalist-open-data.s3.amazonaws.com/photos/252895210/large.jpeg"
     }
   ]
 }
