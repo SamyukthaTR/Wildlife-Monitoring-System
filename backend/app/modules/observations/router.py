@@ -2,11 +2,11 @@ import os
 import uuid
 import shutil
 from fastapi import (
-    APIRouter, BackgroundTasks, Depends, HTTPException, status, UploadFile, File, Form
+    APIRouter, BackgroundTasks, Depends, HTTPException, Query, status, UploadFile, File, Form
 )
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.core.config import settings
 from app.core.deps import get_db, get_current_user, RoleChecker
 from app.modules.analysis.pipeline import run_analysis
@@ -34,25 +34,21 @@ async def upload_observation(
     db: Session = Depends(get_db),
     current_user: User = Depends(write_roles)
 ):
-    # 1. Validate survey
     survey = db.query(Survey).filter(Survey.id == survey_id).first()
     if not survey:
         raise HTTPException(status_code=404, detail="Survey not found")
 
-    # 2. Validate MIME type
     if not file.content_type or file.content_type not in ALLOWED_MIME_TYPES:
         if not (file.content_type and (file.content_type.startswith("image/") or file.content_type.startswith("audio/"))):
             raise HTTPException(status_code=400, detail="Invalid file type. Only images and audio are allowed.")
-    
-    # 3. Determine file type enum
+
     file_type = FileTypeEnum.IMAGE if file.content_type.startswith("image") else FileTypeEnum.AUDIO
 
-    # 4. Generate UUID filename to prevent path traversal & collisions
+    # UUID filename prevents path traversal and collisions from user-supplied names.
     ext = os.path.splitext(file.filename)[1] if file.filename else ""
     safe_filename = f"{uuid.uuid4()}{ext}"
     file_path = os.path.join(UPLOAD_DIR, safe_filename)
 
-    # 5. Save file & check size limit
     file.file.seek(0, os.SEEK_END)
     file_size = file.file.tell()
     if file_size > MAX_FILE_SIZE:
@@ -65,7 +61,6 @@ async def upload_observation(
     except Exception as e:
         raise HTTPException(status_code=500, detail="Could not save file")
 
-    # 6. Create ObservationLog
     new_obs = ObservationLog(
         survey_id=survey_id,
         uploaded_by=current_user.id,
@@ -85,13 +80,24 @@ async def upload_observation(
 
 
 @router.get("", response_model=List[ObservationLogResponse])
-def get_observations(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    query = db.query(ObservationLog)
-    
+def get_observations(
+    limit: Optional[int] = Query(None, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Lists observations, newest first. `limit`/`offset` are optional -- when
+    omitted every matching row is returned, unchanged from before pagination
+    was added, so no existing caller breaks."""
+    query = db.query(ObservationLog).order_by(ObservationLog.uploaded_at.desc())
+
     # Visibility logic: Wildlife Researchers only see their own uploads
     if current_user.role == "Wildlife Researcher":
         query = query.filter(ObservationLog.uploaded_by == current_user.id)
-        
+
+    query = query.offset(offset)
+    if limit is not None:
+        query = query.limit(limit)
     return query.all()
 
 

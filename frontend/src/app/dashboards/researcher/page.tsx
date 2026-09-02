@@ -69,7 +69,7 @@ export default function ResearcherDashboard() {
       setMessage('Site created successfully!');
       fetchData();
       setSiteForm({ location_name: '', latitude: '', longitude: '', habitat_type: '', protected_area: '', monitoring_device_type: '' });
-    } catch (err) {
+    } catch {
       setMessage('Error creating site');
     }
     setLoading(false);
@@ -86,7 +86,7 @@ export default function ResearcherDashboard() {
       setMessage('Survey registered successfully!');
       fetchData();
       setSurveyForm({ site_id: '', survey_date: '', notes: '' });
-    } catch (err) {
+    } catch {
       setMessage('Error creating survey');
     }
     setLoading(false);
@@ -102,7 +102,7 @@ export default function ResearcherDashboard() {
       });
       setMessage('Device registered successfully!');
       setDeviceForm({ site_id: '', device_type: 'camera_trap', serial: '' });
-    } catch (err) {
+    } catch {
       setMessage('Error registering device (Serial might be duplicate)');
     }
     setLoading(false);
@@ -126,7 +126,7 @@ export default function ResearcherDashboard() {
       setMessage('File uploaded. Analysis has been queued and runs in the background.');
       fetchData();
       setUploadForm({ survey_id: '', file: null });
-    } catch (err) {
+    } catch {
       setMessage('Error uploading file (check format/size)');
     }
     setLoading(false);
@@ -165,6 +165,9 @@ export default function ResearcherDashboard() {
               </a>
               <a href="/population" className="px-5 py-2.5 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-xl font-medium transition-colors">
                 Population Intelligence
+              </a>
+              <a href="/map" className="px-5 py-2.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl font-medium transition-colors">
+                Map View
               </a>
               <button onClick={logout} className="px-5 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-medium transition-colors">
                 Sign Out

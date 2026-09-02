@@ -27,7 +27,7 @@ const CHART_COLOURS = [
 ];
 
 export default function BiodiversityPage() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   const [scope, setScope] = useState<string>('');
   const [sites, setSites] = useState<SiteIndices[]>([]);

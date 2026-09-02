@@ -310,3 +310,45 @@ export type EcosystemHealth = {
 };
 
 export type EcosystemHealthSiteRow = EcosystemHealth & { location_name: string };
+
+export type SitePriorityRow = {
+  site_id: number;
+  location_name: string;
+  overall_health: number | null;
+  high_priority_flags: number;
+  total_recommendations: number;
+};
+
+// Shared shapes for the Administrator endpoints (user management + platform overview).
+
+export type AppRole = 'Wildlife Researcher' | 'Conservation Officer' | 'Forest Department Officer' | 'Administrator';
+
+export type AdminUser = {
+  id: number;
+  name: string;
+  email: string;
+  role: AppRole;
+  organization: string | null;
+  created_at: string;
+};
+
+export type PlatformOverview = {
+  users: { total: number; by_role: Record<string, number> };
+  monitoring: {
+    sites: number;
+    surveys: number;
+    devices: number;
+    devices_by_status: Record<string, number>;
+  };
+  observations: { total: number; by_status: Record<string, number> };
+  analysis: {
+    runs_completed: number;
+    runs_failed: number;
+    runs_running: number;
+    ml_enabled: boolean;
+  };
+  species: {
+    distinct_species_detected: number;
+    endangered_species_detected: number;
+  };
+};

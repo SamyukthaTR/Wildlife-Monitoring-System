@@ -9,10 +9,8 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    console.log("page.tsx useEffect -> loading:", loading, "user:", user);
     if (!loading) {
       if (!user) {
-        console.log("Pushing to /login");
         window.location.href = '/login';
       } else {
         const dashboardRoutes: Record<RoleEnum, string> = {
@@ -21,7 +19,6 @@ export default function Home() {
           'Forest Department Officer': '/dashboards/forest-officer',
           'Administrator': '/dashboards/admin',
         };
-        console.log("Pushing to dashboard:", dashboardRoutes[user.role]);
         window.location.href = dashboardRoutes[user.role];
       }
     }

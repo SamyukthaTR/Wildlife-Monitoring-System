@@ -13,7 +13,6 @@ from app.modules.monitoring.schemas import (
 
 router = APIRouter(prefix="/monitoring", tags=["monitoring"])
 
-# Enforce strict roles for POST operations
 write_roles = RoleChecker(['Wildlife Researcher', 'Conservation Officer'])
 
 # --- Monitoring Sites ---
@@ -23,7 +22,6 @@ def create_site(
     db: Session = Depends(get_db),
     current_user: User = Depends(write_roles)
 ):
-    # Convert lat/lng to WKT for PostGIS
     wkt_geom = f"SRID=4326;POINT({site_in.longitude} {site_in.latitude})"
     
     new_site = MonitoringSite(
@@ -38,7 +36,6 @@ def create_site(
     db.commit()
     db.refresh(new_site)
     
-    # We must construct the response to parse the geom back to lat/lng
     return MonitoringSiteResponse(
         id=new_site.id,
         location_name=new_site.location_name,
@@ -53,7 +50,6 @@ def create_site(
 
 @router.get("/sites", response_model=List[MonitoringSiteResponse])
 def get_sites(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    # To get lat/lng efficiently out of PostGIS
     sites = db.query(
         MonitoringSite.id,
         MonitoringSite.location_name,
@@ -75,7 +71,6 @@ def create_survey(
     db: Session = Depends(get_db),
     current_user: User = Depends(write_roles)
 ):
-    # Verify site exists
     site = db.query(MonitoringSite).filter(MonitoringSite.id == survey_in.site_id).first()
     if not site:
         raise HTTPException(status_code=404, detail="Site not found")
@@ -101,12 +96,10 @@ def create_device(
     db: Session = Depends(get_db),
     current_user: User = Depends(write_roles)
 ):
-    # Check if serial exists
     existing = db.query(Device).filter(Device.serial == device_in.serial).first()
     if existing:
         raise HTTPException(status_code=400, detail="Device with this serial already exists")
         
-    # Verify site exists
     site = db.query(MonitoringSite).filter(MonitoringSite.id == device_in.site_id).first()
     if not site:
         raise HTTPException(status_code=404, detail="Site not found")

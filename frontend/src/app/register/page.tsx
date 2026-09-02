@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Link from 'next/link';
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,8 +24,9 @@ export default function RegisterPage() {
       setTimeout(() => {
         window.location.href = '/login';
       }, 2000);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to register.');
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(detail || 'Failed to register.');
     }
   };
 

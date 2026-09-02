@@ -5,7 +5,6 @@ import axios from 'axios';
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
-// In-memory access token storage
 let accessToken: string | null = null;
 
 export const setAccessToken = (token: string | null) => {
@@ -19,7 +18,6 @@ const api = axios.create({
   withCredentials: true, // Crucial for sending/receiving HttpOnly cookies
 });
 
-// Request interceptor to attach access token if available
 api.interceptors.request.use((config) => {
   if (config.headers) {
     if (accessToken) {
@@ -32,17 +30,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor to handle 401s and refresh the token
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
-    // If error is 401 and we haven't already retried this request
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        // Attempt to refresh the token via HttpOnly cookie
         const res = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
           {},
@@ -50,14 +45,10 @@ api.interceptors.response.use(
         );
         const newAccessToken = res.data.access_token;
         setAccessToken(newAccessToken);
-        
-        // Update the original request's Authorization header
+
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        
-        // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, clear token and reject
         setAccessToken(null);
         return Promise.reject(refreshError);
       }
@@ -65,5 +56,20 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+/** Downloads a report endpoint's response (csv/pdf/xlsx) as a file in the browser. */
+export async function downloadReport(
+  url: string,
+  params: Record<string, string | number>,
+  filename: string
+): Promise<void> {
+  const res = await api.get(url, { params, responseType: 'blob' });
+  const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  link.click();
+  window.URL.revokeObjectURL(blobUrl);
+}
 
 export default api;

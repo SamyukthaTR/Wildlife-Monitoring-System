@@ -165,6 +165,12 @@ export default function ConservationOfficerDashboard() {
               <a href="/conservation" className="px-5 py-2.5 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-xl font-medium transition-colors">
                 Conservation Insights
               </a>
+              <a href="/map" className="px-5 py-2.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl font-medium transition-colors">
+                Map View
+              </a>
+              <a href="/executive" className="px-5 py-2.5 bg-violet-50 text-violet-700 hover:bg-violet-100 rounded-xl font-medium transition-colors">
+                Executive Overview
+              </a>
               <button onClick={logout} className="px-5 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-medium transition-colors">
                 Sign Out
               </button>

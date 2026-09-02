@@ -17,3 +17,6 @@ class UserResponse(BaseModel):
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     organization: Optional[str] = None
+
+class UserRoleUpdate(BaseModel):
+    role: RoleEnum

@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.11-slim AS base
 
 WORKDIR /app
 
@@ -26,5 +26,18 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && pip uninstall -y opencv-python opencv-contrib-python || true \
     && pip install --no-cache-dir opencv-python-headless==4.10.0.84
 
-# The application code will be mounted as a volume in development
-# The entrypoint command is handled by docker-compose for hot reload
+# --- Production image: bakes in the application code and runs without
+# --reload, as a non-root user. Used by docker-compose.prod.yml.
+FROM base AS prod
+RUN useradd --create-home --shell /bin/bash appuser
+COPY . .
+RUN mkdir -p uploads model_cache && chown -R appuser:appuser /app
+USER appuser
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+
+# --- Development image (default build target). Application code and the run
+# command come from docker-compose.yml's bind mount and command override, not
+# from this image, so plain `docker build` / `docker compose up` keep working
+# exactly as before.
+FROM base AS dev

@@ -3,16 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import api, { API_BASE_URL } from '@/lib/api';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const { login, logout } = useAuth();
   const router = useRouter();
-  
+
   // Clear any lingering session state when hitting the login page
   useEffect(() => {
     logout();
+    if (new URLSearchParams(window.location.search).get('error') === 'google_oauth_failed') {
+      setError('Google sign-in failed. Please try again or use email/password.');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,14 +29,14 @@ export default function LoginPage() {
       const res = await api.post('/auth/login', { email, password });
       await login(res.data.access_token);
       router.push('/');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to login. Check credentials.');
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(detail || 'Failed to login. Check credentials.');
     }
   };
 
-  const handleGoogleAuth = async () => {
-    // Stubbed out for now
-    alert("Google OAuth flow is stubbed for now.");
+  const handleGoogleAuth = () => {
+    window.location.href = `${API_BASE_URL}/auth/google/login`;
   };
 
   return (
@@ -94,7 +98,7 @@ export default function LoginPage() {
         </div>
         
         <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/register" className="font-medium text-green-600 hover:text-green-500">
             Sign up
           </Link>

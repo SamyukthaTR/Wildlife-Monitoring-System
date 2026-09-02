@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
-import api from '@/lib/api';
+import api, { downloadReport } from '@/lib/api';
 import type { EcosystemHealth, EcosystemHealthSiteRow, SiteRecommendations } from '@/lib/types';
 
 type Site = { id: number; location_name: string };
@@ -65,6 +65,20 @@ export default function ConservationPage() {
     fetchScoped(scope);
   }, [scope, fetchScoped]);
 
+  const handleDownloadReport = async (format: 'pdf' | 'xlsx') => {
+    const site = sites.find((s) => String(s.id) === scope);
+    const scopeName = site?.location_name ?? 'all-sites';
+    try {
+      await downloadReport(
+        '/reports/conservation',
+        scope ? { site_id: Number(scope), format } : { format },
+        `conservation-report-${scopeName.replace(/\s+/g, '-')}.${format}`
+      );
+    } catch {
+      setError('Could not generate conservation report.');
+    }
+  };
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-slate-50 p-8 font-sans">
@@ -106,6 +120,20 @@ export default function ConservationPage() {
                 <option key={site.id} value={site.id}>{site.location_name}</option>
               ))}
             </select>
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => handleDownloadReport('pdf')}
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors"
+              >
+                Download PDF Report
+              </button>
+              <button
+                onClick={() => handleDownloadReport('xlsx')}
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors"
+              >
+                Download Excel Report
+              </button>
+            </div>
           </div>
 
           {/* Ecosystem health */}

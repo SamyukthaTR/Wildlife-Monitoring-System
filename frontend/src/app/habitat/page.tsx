@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
-import api from '@/lib/api';
+import api, { downloadReport } from '@/lib/api';
 import type { HabitatDetail, HabitatEnvironment, HabitatSuitability } from '@/lib/types';
 
 type Site = { id: number; location_name: string; habitat_type: string | null };
@@ -83,6 +83,20 @@ export default function HabitatPage() {
     }
   };
 
+  const handleDownloadReport = async (format: 'pdf' | 'xlsx') => {
+    if (!siteId) return;
+    const site = sites.find((s) => String(s.id) === siteId);
+    try {
+      await downloadReport(
+        '/reports/habitat',
+        { site_id: Number(siteId), format },
+        `habitat-report-${(site?.location_name ?? siteId).replace(/\s+/g, '-')}.${format}`
+      );
+    } catch {
+      setError('Could not generate habitat report.');
+    }
+  };
+
   const chartData = detail?.assessments.map((a) => ({
     date: new Date(a.assessed_at).toLocaleDateString(),
     vegetation_index: a.vegetation_index,
@@ -143,6 +157,20 @@ export default function HabitatPage() {
                 {assessing ? 'Assessing…' : 'Run Vegetation Assessment'}
               </button>
             )}
+            <button
+              onClick={() => handleDownloadReport('pdf')}
+              disabled={!siteId}
+              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 rounded-xl font-medium transition-colors"
+            >
+              Download PDF Report
+            </button>
+            <button
+              onClick={() => handleDownloadReport('xlsx')}
+              disabled={!siteId}
+              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 rounded-xl font-medium transition-colors"
+            >
+              Download Excel Report
+            </button>
           </div>
 
           {/* Habitat classification + degradation */}

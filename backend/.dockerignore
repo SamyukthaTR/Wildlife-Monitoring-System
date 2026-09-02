@@ -1,0 +1,8 @@
+.venv-ml
+__pycache__
+*.pyc
+.pytest_cache
+uploads
+model_cache
+.env
+.git

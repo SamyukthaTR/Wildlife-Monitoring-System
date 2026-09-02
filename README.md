@@ -43,3 +43,31 @@ The entire stack (Frontend, Backend, PostgreSQL with PostGIS, and MongoDB) can b
 - **Frontend**: Node.js 20+, Next.js, React, Tailwind CSS
 - **Primary Database**: PostgreSQL + PostGIS (for spatial data)
 - **Secondary Database**: MongoDB (for unstructured data/logs)
+
+## Running Tests
+
+Backend pure-function tests need no database and run anywhere:
+```bash
+docker compose exec backend pytest tests/ -m "not integration" -q
+```
+Backend integration tests (API endpoints via FastAPI's TestClient) need a
+live Postgres+PostGIS database:
+```bash
+docker compose exec postgres psql -U <POSTGRES_USER> -d <POSTGRES_DB> -c "CREATE DATABASE <POSTGRES_DB>_test;"
+docker compose exec backend pytest tests/ -m integration -q
+```
+Frontend:
+```bash
+cd frontend
+npm test          # Jest + React Testing Library
+npx tsc --noEmit  # typecheck
+npm run lint
+npm run build     # production build
+```
+See `.github/workflows/ci.yml` for how these all run together in CI.
+
+## Production Deployment
+
+See [`docs/deployment.md`](docs/deployment.md) for a full guide to deploying
+`docker-compose.prod.yml` (production-built images, no bind mounts, automatic
+TLS via Caddy) to any Docker-capable VM.
