@@ -10,6 +10,13 @@ jobs:
   backend-unit:
     name: Backend unit tests (no database)
     runs-on: ubuntu-latest
+    env:
+      # Settings.DATABASE_URL has no default and SQLAlchemy's create_engine()
+      # is lazy, so a placeholder is fine here -- nothing in this job
+      # actually connects to it (see tests/conftest.py: db_session, and
+      # everything that depends on it, is behind the "integration" marker
+      # deselected by -m "not integration" below).
+      DATABASE_URL: postgresql://unused:unused@localhost:5432/unused
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
