@@ -1,6 +1,13 @@
-# Environment variables
+# Environment variables (secrets) -- ignore every .env* variant (.env,
+# .env.local, .env.prod, etc.) except the checked-in .env.example templates.
+# Previously only ".env" and ".env.local" were listed, so a file like
+# ".env.prod" (created by following docs/deployment.md) was NOT gitignored
+# and could have been committed by accident.
 .env
-.env.local
+.env.*
+!.env.prod.example
+!backend/.env.example
+!infra/.env.example
 
 # Node
 node_modules/

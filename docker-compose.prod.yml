@@ -1,10 +1,23 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   backend:
+    # `docker compose build` builds this from source and tags it `image:`;
+    # `docker compose pull backend` instead fetches the prebuilt image from
+    # GHCR (published by .github/workflows/docker-publish.yml on every push
+    # to main) -- useful to skip rebuilding the ML dependencies on the VM.
+    # Override BACKEND_IMAGE in .env.prod to pin a specific commit SHA tag.
+    image: ${BACKEND_IMAGE:-ghcr.io/samyukthatr/wildlife-monitoring-system-backend:latest}
     build:
       context: ./backend
       target: prod
     container_name: wildlife_backend
     restart: unless-stopped
+    logging: *default-logging
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - MONGO_URI=${MONGO_URI}
@@ -40,13 +53,20 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: wildlife_frontend
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   postgres:
     image: postgis/postgis:15-3.3
     container_name: wildlife_postgres
     restart: unless-stopped
+    logging: *default-logging
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -63,6 +83,7 @@ services:
     image: mongo:7.0
     container_name: wildlife_mongodb
     restart: unless-stopped
+    logging: *default-logging
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
@@ -73,6 +94,7 @@ services:
     image: caddy:2-alpine
     container_name: wildlife_caddy
     restart: unless-stopped
+    logging: *default-logging
     ports:
       - "80:80"
       - "443:443"

@@ -37,7 +37,7 @@ engine = create_engine(TEST_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def _setup_database():
     with engine.begin() as conn:
         conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
@@ -46,8 +46,12 @@ def _setup_database():
     Base.metadata.drop_all(bind=engine)
 
 
-@pytest.fixture(autouse=True)
-def _clean_tables():
+@pytest.fixture
+def _clean_tables(_setup_database):
+    # Depends on (rather than autouse-triggers) _setup_database so this only
+    # touches the database -- and only requires one to be reachable -- for
+    # tests that actually request db_session/client/auth_headers. Pure-function
+    # tests never request it and stay fully database-free.
     yield
     with engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
@@ -64,7 +68,7 @@ def _reset_rate_limits():
 
 
 @pytest.fixture
-def db_session():
+def db_session(_clean_tables):
     session = TestingSessionLocal()
     try:
         yield session

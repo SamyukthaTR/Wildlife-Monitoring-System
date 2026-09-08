@@ -31,21 +31,24 @@ of by host if you don't want two subdomains.)
 ```bash
 git clone <this-repo-url>
 cd Wildlife-Monitoring-System
-cp .env .env.prod   # then edit .env.prod with real values:
+cp .env.prod.example .env.prod   # then edit .env.prod with real values
 ```
 
-At minimum, replace in `.env.prod`:
+Use `.env.prod.example` -- **not** the dev `.env` -- as the starting point.
+Generate fresh secrets and OAuth credentials for production rather than
+reusing dev values (dev's `SECRET_KEY` and Google OAuth client are for local
+use only and should never sign a production session). At minimum, fill in:
 - `SECRET_KEY` -- a real random value (`openssl rand -hex 32`), never the dev default
 - `POSTGRES_PASSWORD`, `MONGO_INITDB_ROOT_PASSWORD` -- strong values
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` -- if Google sign-in is wanted; add
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` -- separate production OAuth
+  credentials if Google sign-in is wanted; add
   `https://api.yourdomain.com/auth/google/callback` as an authorized redirect
   URI in Google Cloud Console
-- `GOOGLE_REDIRECT_URI=https://api.yourdomain.com/auth/google/callback`
-- `FRONTEND_URL=https://app.yourdomain.com`
-- `NEXT_PUBLIC_API_URL=https://api.yourdomain.com`
-- `CORS_ORIGINS=https://app.yourdomain.com`
-- `APP_DOMAIN=app.yourdomain.com`
-- `API_DOMAIN=api.yourdomain.com`
+- `APP_DOMAIN`, `API_DOMAIN`, `FRONTEND_URL`, `NEXT_PUBLIC_API_URL`, `CORS_ORIGINS`
+  -- your real domains
+
+`.env.prod` is gitignored (along with every other `.env*` file except the
+`.env.example` templates) -- it never gets committed.
 
 ## 4. Build and start
 
@@ -53,6 +56,19 @@ At minimum, replace in `.env.prod`:
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 docker compose -f docker-compose.prod.yml --env-file .env.prod exec backend alembic upgrade head
 ```
+
+The backend's production image (torch, transformers, ultralytics, ...) takes
+a few minutes to build from scratch. To skip that on the VM, pull the
+prebuilt image instead -- `.github/workflows/docker-publish.yml` publishes it
+to GHCR on every push to `main`:
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.prod pull backend
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
+(`--build` still builds the frontend, which has no heavy ML deps and is
+fast; `pull` only affects services with a published `image:`, so it leaves
+`frontend` alone.) If the GHCR package is private, `docker login ghcr.io`
+first with a token that has `read:packages` scope.
 
 Caddy (the `caddy` service) automatically requests and renews Let's Encrypt
 TLS certificates for `APP_DOMAIN`/`API_DOMAIN` the first time it starts, as
@@ -94,7 +110,6 @@ Every request is logged in a consistent format by `app/core/logging.py`
 ```bash
 docker compose -f docker-compose.prod.yml logs -f backend
 ```
-Docker's default `json-file` log driver is used; add
-`logging: {driver: json-file, options: {max-size: "10m", max-file: "3"}}`
-per-service in `docker-compose.prod.yml` if disk usage from logs needs
-bounding on a long-running VM.
+Every service uses the `json-file` log driver with `max-size: 10m, max-file: 3`
+(see the `x-logging` anchor at the top of `docker-compose.prod.yml`), so log
+disk usage on a long-running VM stays bounded automatically.

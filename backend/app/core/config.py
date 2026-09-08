@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -50,5 +51,15 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore"
     )
+
+    @field_validator("SECRET_KEY", "DATABASE_URL")
+    @classmethod
+    def _not_blank(cls, v: str, info) -> str:
+        # .env.prod.example ships these blank on purpose so a rushed deploy
+        # can't miss filling them in -- pydantic would otherwise happily
+        # accept an empty string (e.g. JWTs signed with SECRET_KEY="").
+        if not v.strip():
+            raise ValueError(f"{info.field_name} must not be blank")
+        return v
 
 settings = Settings()
