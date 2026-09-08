@@ -17,6 +17,38 @@ disk. Install Docker + the Compose plugin per your provider's usual
 instructions (`curl -fsSL https://get.docker.com | sh`, then `apt-get install
 docker-compose-plugin` on Debian/Ubuntu-based images).
 
+### Azure quickstart
+
+```bash
+az group create --name wildlife-rg --location eastus
+
+az vm create \
+  --resource-group wildlife-rg \
+  --name wildlife-vm \
+  --image Ubuntu2204 \
+  --size Standard_B4ms \
+  --admin-username azureuser \
+  --generate-ssh-keys \
+  --public-ip-sku Standard \
+  --os-disk-size-gb 40
+
+az vm open-port --resource-group wildlife-rg --name wildlife-vm --port 80 --priority 1001
+az vm open-port --resource-group wildlife-rg --name wildlife-vm --port 443 --priority 1002
+
+az vm show -d --resource-group wildlife-rg --name wildlife-vm --query publicIps -o tsv
+```
+`Standard_B4ms` (4 vCPU, 16GB RAM, burstable/cost-efficient) comfortably
+clears the minimum spec above; use a non-burstable size (e.g.
+`Standard_D4s_v5`) instead if the ML inference load is sustained rather than
+bursty. Point your domain's DNS at the IP printed by the last command, then
+SSH in and install Docker:
+```bash
+ssh azureuser@<public-ip>
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+# log out and back in for the group change to take effect
+```
+
 ## 2. Point DNS at the VM
 
 Create two DNS A records pointing at the VM's public IP:
