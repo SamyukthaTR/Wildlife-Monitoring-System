@@ -21,9 +21,6 @@ UPLOAD_DIR = settings.UPLOAD_DIR
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "audio/mpeg", "audio/wav", "audio/ogg"]
 
-# Ensure uploads directory exists
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
 write_roles = RoleChecker(['Wildlife Researcher', 'Conservation Officer'])
 
 @router.post("/upload", response_model=ObservationLogResponse, status_code=status.HTTP_201_CREATED)
@@ -56,6 +53,10 @@ async def upload_observation(
     file.file.seek(0)
 
     try:
+        # Created lazily here (not at import time) so importing this module
+        # -- e.g. for tests, or tooling -- never depends on UPLOAD_DIR
+        # (/app/uploads by default) being writable outside the container.
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
     except Exception as e:
